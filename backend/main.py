@@ -4,7 +4,7 @@ Monitors pokemoncenter.com for queue status and sends Firebase notifications
 """
 
 import os
-import time
+import asyncio
 import logging
 from typing import Dict
 from datetime import datetime
@@ -33,6 +33,7 @@ app = FastAPI(title="KK's Pokemon Alert Backend")
 firebase_app = None
 last_status = None
 monitoring_active = False
+monitoring_lock = asyncio.Lock()
 
 
 def initialize_firebase():
@@ -139,7 +140,7 @@ def send_fcm_notification(status: str, keywords: list = None):
             data={
                 'status': status,
                 'timestamp': datetime.now().isoformat(),
-                'keywords': ','.join(keywords) if keywords else ''
+                'keywords': ','.join(keywords or [])
             },
             topic=topic,
             android=messaging.AndroidConfig(
@@ -163,7 +164,7 @@ def send_fcm_notification(status: str, keywords: list = None):
         logger.error(f"Failed to send FCM notification: {e}")
 
 
-def monitor_loop():
+async def monitor_loop():
     """Background task that monitors the website every 3 minutes"""
     global monitoring_active
     
@@ -182,13 +183,13 @@ def monitor_loop():
                     result.get('keywords_found')
                 )
             
-            # Wait 3 minutes (180 seconds)
+            # Wait 3 minutes (180 seconds) - using async sleep to not block
             logger.info("Waiting 3 minutes before next check...")
-            time.sleep(180)
+            await asyncio.sleep(180)
             
         except Exception as e:
             logger.error(f"Error in monitoring loop: {e}")
-            time.sleep(60)  # Wait 1 minute on error before retrying
+            await asyncio.sleep(60)  # Wait 1 minute on error before retrying
 
 
 @app.on_event("startup")
@@ -217,16 +218,17 @@ async def start_monitoring(background_tasks: BackgroundTasks):
     """Start the monitoring loop"""
     global monitoring_active
     
-    if monitoring_active:
-        return {"message": "Monitoring is already active"}
-    
-    # Add monitoring task to background
-    background_tasks.add_task(monitor_loop)
-    
-    return {
-        "message": "Monitoring started",
-        "interval": "3 minutes"
-    }
+    async with monitoring_lock:
+        if monitoring_active:
+            return {"message": "Monitoring is already active"}
+        
+        # Add monitoring task to background
+        background_tasks.add_task(monitor_loop)
+        
+        return {
+            "message": "Monitoring started",
+            "interval": "3 minutes"
+        }
 
 
 @app.post("/stop-monitoring")
@@ -250,13 +252,24 @@ async def get_status():
 
 @app.post("/test-notification")
 async def test_notification():
-    """Send a test notification"""
+    """Send a test notification (does not affect monitoring state)"""
+    global last_status
+    
     try:
         if not firebase_app:
             initialize_firebase()
         
+        # Save current status and temporarily reset for test
+        saved_status = last_status
+        last_status = None
+        
+        # Send test notification
         send_fcm_notification("Queue Up", ["test"])
-        return {"message": "Test notification sent"}
+        
+        # Restore original status
+        last_status = saved_status
+        
+        return {"message": "Test notification sent (monitoring state preserved)"}
     except Exception as e:
         return {"error": str(e)}
 

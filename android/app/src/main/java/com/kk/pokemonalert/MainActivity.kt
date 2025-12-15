@@ -36,6 +36,12 @@ class MainActivity : ComponentActivity() {
             subscribeToTopic()
         }
     }
+    
+    companion object {
+        private const val TAG = "MainActivity"
+        private const val SNOOZE_DURATION_HOURS = 2
+        private const val SNOOZE_DURATION_MILLIS = SNOOZE_DURATION_HOURS * 60 * 60 * 1000L
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,10 +75,6 @@ class MainActivity : ComponentActivity() {
                     Log.d(TAG, "Subscribed to pokemon_queue_alerts topic")
                 }
             }
-    }
-    
-    companion object {
-        private const val TAG = "MainActivity"
     }
 }
 
@@ -166,9 +168,8 @@ fun MainScreen() {
                             isSnoozed = false
                         }
                     } else {
-                        // Snooze for 2 hours
-                        val twoHoursInMillis = 2 * 60 * 60 * 1000L
-                        val snoozeTime = System.currentTimeMillis() + twoHoursInMillis
+                        // Snooze for configured duration
+                        val snoozeTime = System.currentTimeMillis() + SNOOZE_DURATION_MILLIS
                         scope.launch {
                             preferencesManager.setSnoozeUntil(snoozeTime)
                             snoozeUntil = snoozeTime
@@ -184,7 +185,7 @@ fun MainScreen() {
                     .height(56.dp)
             ) {
                 Text(
-                    text = if (isSnoozed) "RESUME NOTIFICATIONS" else "SNOOZE FOR 2 HOURS",
+                    text = if (isSnoozed) "RESUME NOTIFICATIONS" else "SNOOZE FOR $SNOOZE_DURATION_HOURS HOURS",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 )
