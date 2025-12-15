@@ -70,7 +70,7 @@ def check_website_status() -> Dict[str, any]:
         
         # Make request with timeout and headers
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
         response = requests.get(target_url, headers=headers, timeout=30)
         response.raise_for_status()
@@ -193,7 +193,7 @@ def monitor_loop():
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize Firebase and start monitoring on startup"""
+    """Initialize Firebase on startup"""
     try:
         initialize_firebase()
     except Exception as e:

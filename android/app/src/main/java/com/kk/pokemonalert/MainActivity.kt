@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -65,9 +66,13 @@ class MainActivity : ComponentActivity() {
         FirebaseMessaging.getInstance().subscribeToTopic("pokemon_queue_alerts")
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    println("Subscribed to pokemon_queue_alerts topic")
+                    Log.d(TAG, "Subscribed to pokemon_queue_alerts topic")
                 }
             }
+    }
+    
+    companion object {
+        private const val TAG = "MainActivity"
     }
 }
 
@@ -150,11 +155,12 @@ fun MainScreen() {
             }
             
             // Snooze button
+            val scope = rememberCoroutineScope()
             Button(
                 onClick = {
                     if (isSnoozed) {
                         // Un-snooze
-                        kotlinx.coroutines.MainScope().launch {
+                        scope.launch {
                             preferencesManager.setSnoozeUntil(0L)
                             snoozeUntil = 0L
                             isSnoozed = false
@@ -163,7 +169,7 @@ fun MainScreen() {
                         // Snooze for 2 hours
                         val twoHoursInMillis = 2 * 60 * 60 * 1000L
                         val snoozeTime = System.currentTimeMillis() + twoHoursInMillis
-                        kotlinx.coroutines.MainScope().launch {
+                        scope.launch {
                             preferencesManager.setSnoozeUntil(snoozeTime)
                             snoozeUntil = snoozeTime
                             isSnoozed = true

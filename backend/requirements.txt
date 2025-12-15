@@ -3,5 +3,4 @@ uvicorn[standard]==0.24.0
 firebase-admin==6.3.0
 requests==2.31.0
 beautifulsoup4==4.12.2
-schedule==1.2.0
 python-dotenv==1.0.0

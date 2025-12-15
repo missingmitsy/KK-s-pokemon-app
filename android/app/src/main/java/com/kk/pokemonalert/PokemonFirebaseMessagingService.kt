@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -52,8 +53,12 @@ class PokemonFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        println("New FCM token: $token")
+        Log.d(TAG, "New FCM token: $token")
         // Here you could send the token to your backend if needed
+    }
+    
+    companion object {
+        private const val TAG = "PokemonFCMService"
     }
 
     private fun sendNotification(title: String, message: String, status: String) {
