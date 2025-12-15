@@ -6,7 +6,7 @@ Monitors pokemoncenter.com for queue status and sends Firebase notifications
 import os
 import asyncio
 import logging
-from typing import Dict
+from typing import Dict, Any
 from datetime import datetime
 
 import requests
@@ -28,6 +28,11 @@ logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(title="KK's Pokemon Alert Backend")
+
+# Constants
+CHECK_INTERVAL_SECONDS = 180  # 3 minutes
+ERROR_RETRY_SECONDS = 60  # 1 minute
+USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
 # Global variables
 firebase_app = None
@@ -58,7 +63,7 @@ def initialize_firebase():
         raise
 
 
-def check_website_status() -> Dict[str, any]:
+def check_website_status() -> Dict[str, Any]:
     """
     Check pokemoncenter.com for queue status
     Returns dict with status and keywords found
@@ -71,7 +76,7 @@ def check_website_status() -> Dict[str, any]:
         
         # Make request with timeout and headers
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': USER_AGENT
         }
         response = requests.get(target_url, headers=headers, timeout=30)
         response.raise_for_status()
@@ -183,13 +188,13 @@ async def monitor_loop():
                     result.get('keywords_found')
                 )
             
-            # Wait 3 minutes (180 seconds) - using async sleep to not block
-            logger.info("Waiting 3 minutes before next check...")
-            await asyncio.sleep(180)
+            # Wait configured interval before next check
+            logger.info(f"Waiting {CHECK_INTERVAL_SECONDS} seconds before next check...")
+            await asyncio.sleep(CHECK_INTERVAL_SECONDS)
             
         except Exception as e:
             logger.error(f"Error in monitoring loop: {e}")
-            await asyncio.sleep(60)  # Wait 1 minute on error before retrying
+            await asyncio.sleep(ERROR_RETRY_SECONDS)  # Wait before retrying on error
 
 
 @app.on_event("startup")
@@ -227,7 +232,8 @@ async def start_monitoring(background_tasks: BackgroundTasks):
         
         return {
             "message": "Monitoring started",
-            "interval": "3 minutes"
+            "interval_seconds": CHECK_INTERVAL_SECONDS,
+            "interval": f"{CHECK_INTERVAL_SECONDS // 60} minutes"
         }
 
 

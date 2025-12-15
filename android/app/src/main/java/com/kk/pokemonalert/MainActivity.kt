@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     
@@ -39,8 +40,8 @@ class MainActivity : ComponentActivity() {
     
     companion object {
         private const val TAG = "MainActivity"
-        private const val SNOOZE_DURATION_HOURS = 2
-        private const val SNOOZE_DURATION_MILLIS = SNOOZE_DURATION_HOURS * 60 * 60 * 1000L
+        private const val SNOOZE_DURATION_HOURS = 2L
+        private val SNOOZE_DURATION_MILLIS = TimeUnit.HOURS.toMillis(SNOOZE_DURATION_HOURS)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
