@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KK Pokemon Alert</string>
+    <string name="default_notification_channel_id">pokemon_alerts</string>
+    <string name="default_notification_channel_name">Pokemon Queue Alerts</string>
+    <string name="queue_up">Queue Up</string>
+    <string name="no_queue">No Queue</string>
+    <string name="snooze">Snooze for 2 hours</string>
+    <string name="checking_status">Checking status...</string>
+    <string name="snoozed_until">Snoozed until %s</string>
+</resources>
